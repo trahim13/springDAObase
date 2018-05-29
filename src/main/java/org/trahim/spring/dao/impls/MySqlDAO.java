@@ -2,10 +2,11 @@ package org.trahim.spring.dao.impls;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import org.trahim.spring.dao.interfaces.Mp3DAO;
 import org.trahim.spring.dao.objects.Mp3;
@@ -13,12 +14,14 @@ import org.trahim.spring.dao.objects.Mp3;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class MySqlDAO implements Mp3DAO {
 
-    NamedParameterJdbcTemplate jdbcTemplate;
+    private NamedParameterJdbcTemplate jdbcTemplate;
 
     @Autowired
     @Qualifier(value = "dataSource")
@@ -28,12 +31,16 @@ public class MySqlDAO implements Mp3DAO {
 
 
     @Override
-    public void insert(Mp3 mp3) {
+    public long insert(Mp3 mp3) {
         String sql = "insert into mp3 (name, author) values(:name, :author )";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
         parameterSource.addValue("name", mp3.getName());
         parameterSource.addValue("author", mp3.getAuthor());
-        jdbcTemplate.update(sql, parameterSource);
+        jdbcTemplate.update(sql, parameterSource, keyHolder);
+
+        return keyHolder.getKey().longValue();
     }
 
     @Override
@@ -70,26 +77,60 @@ public class MySqlDAO implements Mp3DAO {
     public List<Mp3> getMp3ListByName(String name) {
         String sql = "select * from mp3 where upper (name) like :name";
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
-        parameterSource.addValue("name", name);
+        parameterSource.addValue("name", "%"+name.toUpperCase()+"%");
 
-        List<Mp3> mp3List = jdbcTemplate.query(sql, parameterSource, new Mp3RowMapper());
-        return mp3List;
+        return jdbcTemplate.query(sql, parameterSource, new Mp3RowMapper());
     }
 
 
     @Override
     public List<Mp3> getMp3ListByAuthor(String author) {
-        String sql = "select * from mp3 where upper (author) like: author";
+        String sql = "select * from mp3 where upper (author) like :author";
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
-        parameterSource.addValue("author", author);
-        List<Mp3> mp3List = jdbcTemplate.query(sql, parameterSource, new Mp3RowMapper());
-        return mp3List;
+        parameterSource.addValue("author", "%"+author.toUpperCase()+"%");
+
+        return jdbcTemplate.query(sql, parameterSource, new Mp3RowMapper());
     }
 
     @Override
     public int getMP3Count() {
         String sql = "select count(*) from mp3";
         return jdbcTemplate.getJdbcOperations().queryForObject(sql, Integer.class);
+    }
+
+
+//    @Override
+//    public Map<String, Long> getStat() {
+//        String sql = "select author, count(*) as count from mp3 group by author";
+//
+//       return jdbcTemplate.query(sql, new ResultSetExtractor<Map<String, Long>>() {
+//            @Override
+//            public Map<String, Long> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
+//                Map<String, Long> map = new HashMap<>();
+//                while (resultSet.next()) {
+//                    String author = resultSet.getString("author");
+//                    Long count = resultSet.getLong("count");
+//                    map.put(author, count);
+//                }
+//                return map;
+//            }
+//        });
+//    }
+
+
+    @Override
+    public Map<String, Long> getStat() {
+        String sql = "select author, count(*) as count from mp3 group by author";
+
+        return jdbcTemplate.query(sql, n -> {
+                Map<String, Long> map = new HashMap<>();
+                while (n.next()) {
+                    String author = n.getString("author");
+                    Long count = n.getLong("count");
+                    map.put(author, count);
+                }
+                return map;
+        });
     }
 
     private static final class Mp3RowMapper implements RowMapper<Mp3> {
