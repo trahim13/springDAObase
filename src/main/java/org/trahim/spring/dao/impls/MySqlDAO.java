@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
@@ -23,32 +26,48 @@ public class MySqlDAO implements Mp3DAO {
 
     private NamedParameterJdbcTemplate jdbcTemplate;
 
+    private SimpleJdbcInsert simpleJdbcInsert;
+
+
+
     @Autowired
     @Qualifier(value = "dataSource")
     private void setDataSource(DataSource dataSource) {
         this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        this.simpleJdbcInsert = new SimpleJdbcInsert(dataSource).withTableName("mp3").usingColumns("name", "author");
     }
+
+
+//    @Override
+//    public long insert(Mp3 mp3) {
+//        String sql = "insert into mp3 (name, author) values(:name, :author )";
+//        KeyHolder keyHolder = new GeneratedKeyHolder();
+//
+//        MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+//        parameterSource.addValue("name", mp3.getName());
+//        parameterSource.addValue("author", mp3.getAuthor());
+//        jdbcTemplate.update(sql, parameterSource, keyHolder);
+//
+//        return keyHolder.getKey().longValue();
+//    }
 
 
     @Override
     public long insert(Mp3 mp3) {
-        String sql = "insert into mp3 (name, author) values(:name, :author )";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
-        parameterSource.addValue("name", mp3.getName());
         parameterSource.addValue("author", mp3.getAuthor());
-        jdbcTemplate.update(sql, parameterSource, keyHolder);
+        parameterSource.addValue("name", mp3.getName());
 
-        return keyHolder.getKey().longValue();
+        return simpleJdbcInsert.execute(parameterSource);
     }
 
     @Override
     public void insert(List<Mp3> list) {
-        for (Mp3 mp3 :
-                list) {
-            insert(mp3);
-        }
+        String sql = "insert into mp3 (author, name) values(:author, :name)";
+
+        SqlParameterSource[] sqlParameterSources = SqlParameterSourceUtils.createBatch(list.toArray());
+        jdbcTemplate.batchUpdate(sql, sqlParameterSources);
+
     }
 
     @Override
