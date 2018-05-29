@@ -7,8 +7,9 @@
 
     <aop:aspectj-autoproxy proxy-target-class="true"/>
     <context:component-scan base-package="org.trahim.spring.*"/>
+
     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
         <property name="url" value="jdbc:mysql://localhost:3306/springdao?useSSL=false&amp;serverTimezone=UTC"/>
         <property name="password" value="root"/>
         <property name="username" value="root"/>

@@ -10,11 +10,17 @@ public class Start {
 
         Mp3 mp3 = new Mp3();
         mp3.setAuthor("trahim");
-        mp3.setName("spring dao 2");
+        mp3.setName("spring dao 4");
 
         ApplicationContext context = new ClassPathXmlApplicationContext("context.xml");
         MySqlDAO mySqlDAO = (MySqlDAO) context.getBean("mySqlDAO");
-        mySqlDAO.insert(mp3);
+//        mySqlDAO.insert(mp3);
 //        mySqlDAO.delete(4);
+
+//        System.out.println(mySqlDAO.getMp3ListByAuthor("trahim"));
+
+//        System.out.println(mySqlDAO.getStat());
+        //
+        System.out.println(mySqlDAO.insert(mp3));
     }
 }

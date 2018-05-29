@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.trahim.spring.dao.interfaces.Mp3DAO;
 import org.trahim.spring.dao.objects.Mp3;
 
@@ -53,6 +54,7 @@ public class MySqlDAO implements Mp3DAO {
 
 
     @Override
+    @Transactional
     public long insert(Mp3 mp3) {
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
         parameterSource.addValue("author", mp3.getAuthor());
@@ -62,6 +64,7 @@ public class MySqlDAO implements Mp3DAO {
     }
 
     @Override
+    @Transactional
     public void insert(List<Mp3> list) {
         String sql = "insert into mp3 (author, name) values(:author, :name)";
 
@@ -70,7 +73,9 @@ public class MySqlDAO implements Mp3DAO {
 
     }
 
+
     @Override
+    @Transactional
     public void delete(long id) {
         String sql = "delete from mp3 where id=:id";
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -79,11 +84,13 @@ public class MySqlDAO implements Mp3DAO {
     }
 
     @Override
+    @Transactional
     public void delete(Mp3 mp3) {
         delete(mp3.getId());
     }
 
     @Override
+    @Transactional
     public Mp3 getMp3ById(long id) {
         String sql = "select * from mp3 where id=:id";
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -93,6 +100,7 @@ public class MySqlDAO implements Mp3DAO {
     }
 
     @Override
+    @Transactional
     public List<Mp3> getMp3ListByName(String name) {
         String sql = "select * from mp3 where upper (name) like :name";
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -103,6 +111,7 @@ public class MySqlDAO implements Mp3DAO {
 
 
     @Override
+    @Transactional
     public List<Mp3> getMp3ListByAuthor(String author) {
         String sql = "select * from mp3 where upper (author) like :author";
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
@@ -112,6 +121,7 @@ public class MySqlDAO implements Mp3DAO {
     }
 
     @Override
+    @Transactional
     public int getMP3Count() {
         String sql = "select count(*) from mp3";
         return jdbcTemplate.getJdbcOperations().queryForObject(sql, Integer.class);
@@ -138,6 +148,7 @@ public class MySqlDAO implements Mp3DAO {
 
 
     @Override
+    @Transactional
     public Map<String, Long> getStat() {
         String sql = "select author, count(*) as count from mp3 group by author";
 
